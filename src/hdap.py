@@ -31,9 +31,7 @@ if 'file_name' in globals():
         error(f'file extension not supportable for usage.\n\t use one of file extension in {file_extensions}', 'file_extension')
     
     try:
-        FUNCTIONS = {
-            "math"
-        }
+        FUNCTIONS = {"math", "str:replace"}
         with open(file_name) as f:
             content = f.read().strip()
             f.close()
@@ -42,6 +40,21 @@ if 'file_name' in globals():
 
         for FUNCTION in FUNCTIONS:
             match FUNCTION:
+
+                case "str:replace":
+                    replace_tags = soup.find_all('replace')
+                    if replace_tags:
+                        for replace_tag in replace_tags:
+                            s1 = replace_tag.get('str')
+                            s2 = replace_tag.get('str1')
+                            s3 = replace_tag.get('str2')
+                            try:
+                                print(str(s1).replace(s2, s3))
+                            except TypeError:
+                                warning("math tag's <str1> or <str2> or <str> attribute must to get a value.")
+                                
+                    else: continue
+
                 case "math":
                     math_tags = soup.find_all('math')
 
@@ -53,12 +66,15 @@ if 'file_name' in globals():
                                 if op not in (math_ops := ['+', '-', '*', '/', '//', '%', '**']):
                                     warning("your math tag's <op> attribute value doesnt in math operator list.")
                                 else:
-                                    res = op.join([math_tag.attrs[i] for i in list(math_tag.attrs) if i != "op"])
+                                    res = op.join(["("+math_tag.attrs[i]+")" for i in list(math_tag.attrs) if i != "op"])
                                     
                                     try:
-                                        soup.find(math_tag.name, attrs=math_tag.attrs).replaceWith(str(eval(res)))
+                                        math_content = soup.find(math_tag.name, attrs=math_tag.attrs).contents[0]
+                                        soup.find(math_tag.name, attrs=math_tag.attrs).replace_with(math_content+str(eval(res)))
                                     except SyntaxError:
                                         error(f"cannot do that operation: {res}", "op_error")
+                                    except AttributeError:
+                                        pass
                             else:
                                 warning("math tag's <op> attribute must to get a value.")
 
@@ -66,6 +82,7 @@ if 'file_name' in globals():
                         continue
         with open(file_name, "w+") as f:
             f.write(soup.prettify())
-            f.close()
+            f.close(),
+
     except FileNotFoundError:
         error(f'file with name {file_name} not found.', 'file_not_found')
