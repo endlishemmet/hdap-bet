@@ -1,0 +1,10 @@
+{
+    "str:replace": {
+        "arguments": ["str", "str1", "str2"],
+        "return": "str($str).replace($str1, $str2)"
+    },
+    "math": {
+        "arguments": ["op", "*"],
+        "return": "$op.join([\"(\"+i+\")\" for i in TAG.attrs if i != $op])"
+    }
+}
